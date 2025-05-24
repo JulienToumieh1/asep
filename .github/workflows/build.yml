@@ -1,79 +1,54 @@
-name: build
-on: [push, pull_request]
+name: Build Aseprite for Windows
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches: [ main ]
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: [RelWithDebInfo, Debug]
-        ui: [gui, cli]
-        scripting: [lua, noscripts]
-        exclude:
-          - build_type: Debug
-            ui: gui
-          - build_type: RelWithDebInfo
-            ui: cli
-          - build_type: RelWithDebInfo
-            scripting: noscripts
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Aseprite
+      uses: actions/checkout@v3
       with:
-        submodules: 'recursive'
+        repository: aseprite/aseprite
+        submodules: recursive
 
-    - name: Install Skia
-      if: ${{ matrix.ui == 'gui' }}
-      shell: bash
+    - name: Set up dependencies
+      uses: lukka/get-cmake@latest
+
+    - name: Install dependencies
       run: |
-        choco install wget -y --no-progress
-        wget https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
-        unzip Skia-Windows-Release-x64.zip -d skia
+        choco install ninja git -y
+        git config --global core.autocrlf input
 
-    - uses: aseprite/get-ninja@main
-
-    - uses: ilammy/msvc-dev-cmd@v1
-
-    - name: Generating Makefiles
-      shell: bash
+    - name: Clone Skia
       run: |
-        export enable_ccache=off
+        git clone https://github.com/aseprite/skia.git skia
+        cd skia
+        python3 tools/git-sync-deps
+        bin/gn gen out/Release --args="is_official_build=true skia_use_system_libpng=false skia_use_system_zlib=false target_os=\"win\""
+        ninja -C out/Release
 
-        if [[ "${{ matrix.ui }}" == "gui" ]] ; then
-          export laf_backend=skia
-        else
-          export laf_backend=none
-        fi
-
-        if [[ "${{ matrix.scripting }}" == "lua" ]] ; then
-          export enable_scripting=on
-        else
-          export enable_scripting=off
-        fi
-
-        cmake -S . -B build -G Ninja ^
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ^
-          -DENABLE_TESTS=ON ^
-          -DENABLE_SCRIPTING=$enable_scripting ^
-          -DENABLE_CCACHE=$enable_ccache ^
-          -DLAF_BACKEND=$laf_backend ^
-          -DSKIA_DIR=skia ^
-          -DSKIA_LIBRARY_DIR=skia/out/Release-x64
-
-    - name: Compiling
-      shell: bash
+    - name: Configure Aseprite
       run: |
-        cd build && ninja
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+              -DLAF_BACKEND=skia `
+              -DSKIA_DIR=${{ github.workspace }}\skia `
+              -DSKIA_OUT_DIR=${{ github.workspace }}\skia\out\Release `
+              -G Ninja ..\
 
-    - name: Running C++ Tests
-      shell: bash
+    - name: Build Aseprite
       run: |
-        cd build && ctest --output-on-failure
+        cd build
+        ninja
 
-    - name: Running CLI Tests
-      if: ${{ matrix.scripting == 'lua' }}
-      shell: bash
-      run: |
-        export ASEPRITE=$PWD/build/bin/aseprite
-        cd tests
-        bash run-tests.sh
+    - name: Upload executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: aseprite-windows
+        path: build\bin\aseprite.exe
