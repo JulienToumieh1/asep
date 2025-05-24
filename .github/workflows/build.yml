@@ -6,11 +6,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
         build_type: [RelWithDebInfo, Debug]
         ui: [gui, cli]
         scripting: [lua, noscripts]
         exclude:
+          - build_type: Debug
+            ui: gui
+          - build_type: RelWithDebInfo
+            ui: cli
           - build_type: RelWithDebInfo
             scripting: noscripts
     steps:
@@ -105,6 +109,7 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
+
 
     - name: Upload executable
       uses: actions/upload-artifact@v4
