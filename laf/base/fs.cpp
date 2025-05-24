@@ -6,7 +6,7 @@
 // Read LICENSE.txt for more information.
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+  #include "config.h"
 #endif
 
 #include "base/fs.h"
@@ -30,9 +30,9 @@ namespace base {
 // On Windows we can use \ or / as path separators, but on Unix-like
 // platforms it's just /, as \ can be part of the file name.
 #if LAF_WINDOWS
-  const std::string::value_type* path_separators = "\\/";
+const std::string::value_type* path_separators = "\\/";
 #else
-  const std::string::value_type* path_separators = "/";
+const std::string::value_type* path_separators = "/";
 #endif
 
 void make_all_directories(const std::string& path)
@@ -62,14 +62,13 @@ std::string get_file_path(const std::string& filename)
   std::string::const_reverse_iterator rit;
   std::string res;
 
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit)
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit)
     if (is_path_separator(*rit))
       break;
 
   if (rit != filename.rend()) {
     ++rit;
-    std::copy(filename.begin(), std::string::const_iterator(rit.base()),
-              std::back_inserter(res));
+    std::copy(filename.begin(), std::string::const_iterator(rit.base()), std::back_inserter(res));
   }
 
   return res;
@@ -80,12 +79,11 @@ std::string get_file_name(const std::string& filename)
   std::string::const_reverse_iterator rit;
   std::string result;
 
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit)
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit)
     if (is_path_separator(*rit))
       break;
 
-  std::copy(std::string::const_iterator(rit.base()), filename.end(),
-            std::back_inserter(result));
+  std::copy(std::string::const_iterator(rit.base()), filename.end(), std::back_inserter(result));
 
   return result;
 }
@@ -96,7 +94,7 @@ std::string get_file_extension(const std::string& filename)
   std::string result;
 
   // search for the first dot from the end of the string
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit) {
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit) {
     if (is_path_separator(*rit))
       return result;
     if (*rit == '.')
@@ -104,8 +102,7 @@ std::string get_file_extension(const std::string& filename)
   }
 
   if (rit != filename.rend()) {
-    std::copy(std::string::const_iterator(rit.base()), filename.end(),
-              std::back_inserter(result));
+    std::copy(std::string::const_iterator(rit.base()), filename.end(), std::back_inserter(result));
   }
 
   return result;
@@ -117,7 +114,7 @@ std::string replace_extension(const std::string& filename, const std::string& ex
   std::string result;
 
   // Search for the first dot from the end of the string.
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit) {
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit) {
     // Here is the dot of the extension.
     if (*rit == '.')
       break;
@@ -132,8 +129,7 @@ std::string replace_extension(const std::string& filename, const std::string& ex
   if (rit != filename.rend()) {
     auto it = std::string::const_iterator(rit.base());
     --it;
-    std::copy(filename.begin(), it,
-              std::back_inserter(result));
+    std::copy(filename.begin(), it, std::back_inserter(result));
   }
   else {
     result = filename;
@@ -147,21 +143,20 @@ std::string replace_extension(const std::string& filename, const std::string& ex
   return result;
 }
 
-
 std::string get_file_title(const std::string& filename)
 {
   std::string::const_reverse_iterator rit;
   std::string::const_iterator last_dot = filename.end();
   std::string result;
 
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit) {
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit) {
     if (is_path_separator(*rit))
       break;
     if (*rit == '.' && last_dot == filename.end())
-      last_dot = rit.base()-1;
+      last_dot = rit.base() - 1;
   }
 
-  for (std::string::const_iterator it(rit.base()); it!=filename.end(); ++it) {
+  for (std::string::const_iterator it(rit.base()); it != filename.end(); ++it) {
     if (it == last_dot)
       break;
     result.push_back(*it);
@@ -175,7 +170,7 @@ std::string get_file_title_with_path(const std::string& filename)
   std::string::const_reverse_iterator rit;
 
   // search for the first dot from the end of the string
-  for (rit=filename.rbegin(); rit!=filename.rend(); ++rit) {
+  for (rit = filename.rbegin(); rit != filename.rend(); ++rit) {
     if (is_path_separator(*rit))
       return filename;
     if (*rit == '.')
@@ -226,7 +221,7 @@ std::string join_path(const std::string& path, const std::string& file)
   std::string result(path);
 
   // Add a separator at the end if it is necessay
-  if (!result.empty() && !is_path_separator(*(result.end()-1)))
+  if (!result.empty() && !is_path_separator(*(result.end() - 1)))
     result.push_back(path_separator);
 
   // Add the file
@@ -239,8 +234,8 @@ std::string remove_path_separator(const std::string& path)
   std::string result(path);
 
   // Erase all trailing separators
-  while (!result.empty() && is_path_separator(*(result.end()-1)))
-    result.erase(result.end()-1);
+  while (!result.empty() && is_path_separator(*(result.end() - 1)))
+    result.erase(result.end() - 1);
 
   return result;
 }
@@ -254,16 +249,16 @@ std::string fix_path_separators(const std::string& filename)
 
 #if LAF_WINDOWS
   // Network paths can start with two backslashes
-  if (filename.size() >= 2 &&
-      filename[0] == path_separator && // Check for equality to backslash (\),
-      filename[1] == path_separator) { // no for is_path_separator()
+  if (filename.size() >= 2 && filename[0] == path_separator && // Check for equality to backslash
+                                                               // (\),
+      filename[1] == path_separator) {                         // no for is_path_separator()
     result.push_back(path_separator);
     result.push_back(path_separator);
     i += 2;
   }
 #endif
 
-  for (; i<filename.size(); ++i) {
+  for (; i < filename.size(); ++i) {
     const auto chr = filename[i];
     if (is_path_separator(chr)) {
       if (result.empty() || !is_path_separator(result.back()))
@@ -286,68 +281,53 @@ std::string normalize_path(const std::string& _path)
   // Replace multiple slashes with a single path_separator.
   std::string path = fix_path_separators(_path);
 
+  std::vector<std::string> parts;
+  split_string(path, parts, path_separators);
+
+  std::vector<std::string> fn_parts;
+  const bool has_root = (!path.empty() && path[0] == path_separator);
+  const bool last_dot = (parts.back() == ".");
+  const bool last_slash = parts.back().empty();
+  if (last_slash || last_dot)
+    parts.pop_back();
+
+  for (const auto& part : parts) {
+    // Skip each dot part.
+    if (part.empty() || part == ".")
+      continue;
+    if (part == "..") {
+      if (has_root && fn_parts.empty())
+        continue;
+      if (!fn_parts.empty() && fn_parts.back() != "..")
+        fn_parts.pop_back();
+      else
+        fn_parts.push_back(part);
+    }
+    else
+      fn_parts.push_back(part);
+  }
+
+  // Reconstruct the filename 'fn' from 'fn_parts'
   std::string fn;
   fn.reserve(path.size());
 
-  // Add the first separator for absolute paths.
-  if (!path.empty() && path[0] == path_separator) {
+  if (has_root) {
     fn.push_back(path_separator);
-
 #if LAF_WINDOWS
     // Add the second separator for network paths.
-    if (path.size() >= 2 &&
-        path[1] == path_separator) {
+    if (path.size() >= 2 && path[1] == path_separator) {
       fn.push_back(path_separator);
     }
 #endif
   }
 
-  std::vector<std::string> parts;
-  split_string(path, parts, path_separators);
+  for (const auto& part : fn_parts)
+    fn = join_path(fn, part);
 
-  // Last element generates a final dot or slash in normalized path.
-  bool last_dot = false;
+  if (!fn.empty() && parts.back() != ".." && (last_slash || last_dot))
+    fn.push_back(path_separator);
 
-  auto n = int(parts.size());
-  for (int i=0; i<n; ++i) {
-    const auto& part = parts[i];
-
-    // Remove each dot part.
-    if (part == ".") {
-      last_dot = true;
-
-      if (i+1 == n)
-        break;
-
-      fn = join_path(fn, std::string());
-      continue;
-    }
-
-    if (!part.empty())
-      last_dot = false;
-
-    if (part != ".." && i+1 < n &&
-        parts[i+1] == "..") {
-      // Skip this "part/.."
-      ++i;
-      last_dot = true;
-    }
-    else if (!part.empty()) {
-      fn = join_path(fn, part);
-    }
-    else
-      last_dot = true;
-  }
-  if (last_dot) {
-    if (fn.empty())
-      fn = ".";
-    else if (fn.back() != path_separator &&
-             // Don't include trailing slash for ".." filename
-             get_file_name(fn) != "..") {
-      fn.push_back(path_separator);
-    }
-  }
-  return fn;
+  return (fn.empty() ? "." : fn);
 }
 
 bool has_file_extension(const std::string& filename, const base::paths& extensions)
@@ -381,7 +361,7 @@ int compare_filenames(const std::string& a, const std::string& b)
       int a_num = (a_chr - '0');
       while (const int c = a_dec2.next()) {
         if ((c >= '0') && (c <= '9'))
-          a_num = (a_num*10 + (c - '0'));
+          a_num = (a_num * 10 + (c - '0'));
         else
           break;
       }
@@ -389,13 +369,13 @@ int compare_filenames(const std::string& a, const std::string& b)
       int b_num = (b_chr - '0');
       while (const int c = b_dec2.next()) {
         if ((c >= '0') && (c <= '9'))
-          b_num = (b_num*10 + (c - '0'));
+          b_num = (b_num * 10 + (c - '0'));
         else
           break;
       }
 
       if (a_num != b_num)
-        return a_num - b_num < 0 ? -1: 1;
+        return a_num - b_num < 0 ? -1 : 1;
     }
     else if (is_path_separator(a_chr) && is_path_separator(b_chr)) {
       // Go to next char
@@ -405,7 +385,7 @@ int compare_filenames(const std::string& a, const std::string& b)
       b_chr = std::tolower(b_chr);
 
       if (a_chr != b_chr)
-        return a_chr - b_chr < 0 ? -1: 1;
+        return a_chr - b_chr < 0 ? -1 : 1;
     }
   }
 

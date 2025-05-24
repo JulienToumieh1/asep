@@ -28,7 +28,7 @@ jobs:
         sudo apt-get update -qq
         sudo apt-get install -y \
           libpixman-1-dev libfreetype6-dev libharfbuzz-dev zlib1g-dev \
-          libx11-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+          libx11-dev libxcursor-dev libxi-dev libgl1-mesa-dev libfontconfig1-dev
     - name: Install Skia
       if: ${{ matrix.ui == 'gui' }}
       shell: bash
@@ -109,10 +109,3 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
-
-
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: aseprite-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}
-        path: build/bin/aseprite.exe

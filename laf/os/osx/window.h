@@ -10,7 +10,7 @@
 #pragma once
 
 #ifdef __OBJC__
-#include <Cocoa/Cocoa.h>
+  #include <Cocoa/Cocoa.h>
 #endif
 
 #include "gfx/point.h"
@@ -26,10 +26,10 @@
 #include "os/window_spec.h"
 
 namespace os {
-  class Event;
-  class Surface;
-  class WindowOSX;
-}
+class Event;
+class Surface;
+class WindowOSX;
+} // namespace os
 
 #ifdef __OBJC__
 
@@ -41,9 +41,9 @@ namespace os {
   WindowOSXDelegate* __strong m_delegate;
   ViewOSX* __strong m_view;
   int m_scale;
+  bool m_floating;
 }
-- (WindowOSXObjc*)initWithImpl:(os::WindowOSX*)impl
-                          spec:(const os::WindowSpec*)spec;
+- (WindowOSXObjc*)initWithImpl:(os::WindowOSX*)impl spec:(const os::WindowSpec*)spec;
 - (os::WindowOSX*)impl;
 - (void)removeImpl;
 - (int)scale;
@@ -52,13 +52,14 @@ namespace os {
 - (void)setMousePosition:(const gfx::Point&)position;
 - (BOOL)setNativeCursor:(os::NativeCursor)cursor;
 - (BOOL)canBecomeKeyWindow;
+- (BOOL)isFloating;
 @end
 
 using WindowOSXObjc_id = WindowOSXObjc*;
 
 #else
 
-#include <objc/objc-runtime.h>
+  #include <objc/objc-runtime.h>
 using WindowOSXObjc_id = id;
 
 #endif
@@ -92,8 +93,7 @@ public:
   void releaseMouse() override;
   void setMousePosition(const gfx::Point& position) override;
 
-  void performWindowAction(const WindowAction action,
-                           const Event* event) override;
+  void performWindowAction(const WindowAction action, const Event* event) override;
 
   os::ScreenRef screen() const override;
   os::ColorSpaceRef colorSpace() const override;
