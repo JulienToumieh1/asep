@@ -31,13 +31,10 @@ jobs:
           export enable_scripting=on
           export skia_arch=x64
 
-          # Workaround for libarchive expecting version file
-          mkdir -p third_party/libarchive/build
-          echo "3" > third_party/libarchive/build/version
+          # DO NOT create bogus version file anymore
 
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_MODULE_PATH="C:/Program Files/CMake/share/cmake-3.29/Modules" \
             -DENABLE_TESTS=ON \
             -DENABLE_SCRIPTING=$enable_scripting \
             -DENABLE_CCACHE=$enable_ccache \
