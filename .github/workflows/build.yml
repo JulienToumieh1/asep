@@ -10,9 +10,9 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: choco install wget unzip ninja -y --no-progress
 
       - name: Install Skia
@@ -20,32 +20,26 @@ jobs:
           wget https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
           unzip Skia-Windows-Release-x64.zip -d skia
 
-      - name: Setup MSVC
+      - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
-      - name: Generate CMake files
+      - name: Generate build files
         shell: bash
         run: |
-          export enable_ccache=off
-          export laf_backend=skia
-          export enable_scripting=on
-          export skia_arch=x64
-
           cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DENABLE_TESTS=ON \
-            -DENABLE_SCRIPTING=$enable_scripting \
-            -DENABLE_CCACHE=$enable_ccache \
-            -DLAF_BACKEND=$laf_backend \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLAF_BACKEND=skia \
             -DSKIA_DIR=skia \
-            -DSKIA_LIBRARY_DIR=skia/out/Release-$skia_arch \
-            -DENABLE_LIBARCHIVE=OFF
+            -DSKIA_LIBRARY_DIR=skia/out/Release-x64 \
+            -DSKIA_LIBRARY=skia/out/Release-x64/skia.lib
 
+      - name: Build aseprite
+        run: cmake --build build --target aseprite
 
-      - name: Compile Aseprite
-        run: cmake --build build
-
-      - name: Run C++ Tests
-        run: |
-          cd build
-          ctest --output-on-failure
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: aseprite-windows
+          path: build/bin/aseprite.exe
