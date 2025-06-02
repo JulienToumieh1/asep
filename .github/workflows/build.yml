@@ -25,13 +25,17 @@ jobs:
 
 
 
-      - name: Generate build files
+      - name: Generate build script
         shell: cmd
-        run: call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64 ^&^& cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=skia -DSKIA_LIBRARY_DIR=skia/out/Release-x64 -DSKIA_LIBRARY=skia/out/Release-x64/skia.lib
+        run: |
+          echo call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64 > build.bat
+          echo cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=skia -DSKIA_LIBRARY_DIR=skia/out/Release-x64 -DSKIA_LIBRARY=skia/out/Release-x64/skia.lib >> build.bat
+          echo cmake --build build --target aseprite >> build.bat
 
+      - name: Run build
+        shell: cmd
+        run: build.bat
 
-      - name: Build aseprite
-        run: cmake --build build --target aseprite
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
