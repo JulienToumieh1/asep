@@ -1,52 +1,29 @@
-name: build-windows-release
+name: Build Aseprite
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: choco install wget unzip ninja -y --no-progress
+    - name: Download Skia prebuilt binaries
+      run: |
+        curl -L -o Skia-Windows-Release-x64.zip https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
+        7z x Skia-Windows-Release-x64.zip -o"skia"
+      shell: bash
 
-      - name: Install Skia
-        run: |
-          wget https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
-          unzip Skia-Windows-Release-x64.zip -d skia
-
-      - name: Setup MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Disable libarchive
-        shell: bash
-        run: |
-          # Comment out or remove the libarchive add_subdirectory line in Aseprite's CMake
-          sed -i.bak '/add_subdirectory(third_party\/libarchive)/d' CMakeLists.txt
-
-
-      - name: Generate build files
-        shell: bash
-        run: |
-          cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLAF_BACKEND=skia \
-            -DSKIA_DIR=skia \
-            -DSKIA_LIBRARY_DIR=skia/out/Release-x64 \
-            -DSKIA_LIBRARY=skia/out/Release-x64/skia.lib
-
-      - name: Build aseprite
-        run: cmake --build build --target aseprite
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: aseprite-windows
-          path: build/bin/aseprite.exe
+    - name: Set up Visual Studio environment and build Aseprite
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64
+        cd aseprite
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=..\..\skia -DSKIA_LIBRARY_DIR=..\..\skia\out\Release-x64 -DSKIA_LIBRARY=..\..\skia\out\Release-x64\skia.lib -G Ninja ..
+        ninja aseprite
