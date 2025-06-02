@@ -31,8 +31,6 @@ jobs:
           export enable_scripting=on
           export skia_arch=x64
 
-          # DO NOT create bogus version file anymore
-
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DENABLE_TESTS=ON \
@@ -40,7 +38,9 @@ jobs:
             -DENABLE_CCACHE=$enable_ccache \
             -DLAF_BACKEND=$laf_backend \
             -DSKIA_DIR=skia \
-            -DSKIA_LIBRARY_DIR=skia/out/Release-$skia_arch
+            -DSKIA_LIBRARY_DIR=skia/out/Release-$skia_arch \
+            -DENABLE_LIBARCHIVE=OFF
+
 
       - name: Compile Aseprite
         run: cmake --build build

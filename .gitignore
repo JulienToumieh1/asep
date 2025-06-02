@@ -16,3 +16,9 @@ tests/_test*
 build
 .build
 CMakeSettings.json
+third_party/fmt/support/.gradle/buildOutputCleanup/cache.properties
+third_party/fmt/support/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+third_party/fmt/support/.gradle/8.9/fileHashes/fileHashes.lock
+third_party/fmt/support/.gradle/8.9/checksums/sha1-checksums.bin
+third_party/fmt/support/.gradle/8.9/checksums/md5-checksums.bin
+third_party/fmt/support/.gradle/8.9/checksums/checksums.lock
