@@ -25,6 +25,13 @@ jobs:
         with:
           arch: x64
 
+      - name: Disable libarchive
+        shell: bash
+        run: |
+          # Comment out or remove the libarchive add_subdirectory line in Aseprite's CMake
+          sed -i.bak '/add_subdirectory(third_party\/libarchive)/d' CMakeLists.txt
+
+
       - name: Generate build files
         shell: bash
         run: |
