@@ -33,10 +33,11 @@ jobs:
 
           # Workaround for libarchive expecting version file
           mkdir -p third_party/libarchive/build
-          echo "3.6.1" > third_party/libarchive/build/version
+          echo "3" > third_party/libarchive/build/version
 
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_MODULE_PATH="C:/Program Files/CMake/share/cmake-3.29/Modules" \
             -DENABLE_TESTS=ON \
             -DENABLE_SCRIPTING=$enable_scripting \
             -DENABLE_CCACHE=$enable_ccache \
