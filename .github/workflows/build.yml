@@ -20,9 +20,17 @@ jobs:
           wget https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
           unzip Skia-Windows-Release-x64.zip -d skia
 
+      - name: Locate Visual Studio installation
+        shell: cmd
+        run: |
+          vswhere.exe -latest -property installationPath
+
+
       - name: Setup MSVC environment
         shell: cmd
-        run: call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64
+        run: |
+          for /f "delims=" %%i in ('vswhere.exe -latest -property installationPath') do set VS_PATH=%%i
+          call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
 
       - name: Build Aseprite
         shell: cmd
