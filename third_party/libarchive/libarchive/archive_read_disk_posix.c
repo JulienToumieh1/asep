@@ -29,7 +29,6 @@
 #if !defined(_WIN32) || defined(__CYGWIN__)
 
 #include "archive_platform.h"
-__FBSDID("$FreeBSD$");
 
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -277,7 +276,7 @@ tree_dir_next_posix(struct tree *t);
 #endif
 
 /* Initiate/terminate a tree traversal. */
-static struct tree *tree_open(const char *, int, int);
+static struct tree *tree_open(const char *, char, int);
 static struct tree *tree_reopen(struct tree *, const char *, int);
 static void tree_close(struct tree *);
 static void tree_free(struct tree *);
@@ -452,7 +451,7 @@ archive_read_disk_new(void)
 {
 	struct archive_read_disk *a;
 
-	a = (struct archive_read_disk *)calloc(1, sizeof(*a));
+	a = calloc(1, sizeof(*a));
 	if (a == NULL)
 		return (NULL);
 	a->archive.magic = ARCHIVE_READ_DISK_MAGIC;
@@ -515,7 +514,7 @@ _archive_read_close(struct archive *_a)
 
 static void
 setup_symlink_mode(struct archive_read_disk *a, char symlink_mode,
-    int follow_symlinks)
+    char follow_symlinks)
 {
 	a->symlink_mode = symlink_mode;
 	a->follow_symlinks = follow_symlinks;
@@ -779,7 +778,8 @@ _archive_read_data_block(struct archive *_a, const void **buff,
 	 */
 	if (t->current_sparse->offset > t->entry_total) {
 		if (lseek(t->entry_fd,
-		    (off_t)t->current_sparse->offset, SEEK_SET) < 0) {
+		    (off_t)t->current_sparse->offset, SEEK_SET) !=
+		    t->current_sparse->offset) {
 			archive_set_error(&a->archive, errno, "Seek error");
 			r = ARCHIVE_FATAL;
 			a->archive.state = ARCHIVE_STATE_FATAL;
@@ -1670,6 +1670,11 @@ setup_current_filesystem(struct archive_read_disk *a)
 	else
 		t->current_filesystem->name_max = nm;
 #endif
+	if (t->current_filesystem->name_max == 0) {
+		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+		    "Cannot determine name_max");
+		return (ARCHIVE_FAILED);
+	}
 #endif /* USE_READDIR_R */
 	return (ARCHIVE_OK);
 }
@@ -1860,7 +1865,16 @@ setup_current_filesystem(struct archive_read_disk *a)
 
 #if defined(USE_READDIR_R)
 	/* Set maximum filename length. */
+#if defined(HAVE_STATVFS)
+	t->current_filesystem->name_max = svfs.f_namemax;
+#else
 	t->current_filesystem->name_max = sfs.f_namelen;
+#endif
+	if (t->current_filesystem->name_max == 0) {
+		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+		    "Cannot determine name_max");
+		return (ARCHIVE_FAILED);
+	}
 #endif
 	return (ARCHIVE_OK);
 }
@@ -1942,6 +1956,11 @@ setup_current_filesystem(struct archive_read_disk *a)
 #if defined(USE_READDIR_R)
 	/* Set maximum filename length. */
 	t->current_filesystem->name_max = svfs.f_namemax;
+	if (t->current_filesystem->name_max == 0) {
+		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+		    "Cannot determine name_max");
+		return (ARCHIVE_FAILED);
+	}
 #endif
 	return (ARCHIVE_OK);
 }
@@ -1996,6 +2015,11 @@ setup_current_filesystem(struct archive_read_disk *a)
 	else
 		t->current_filesystem->name_max = nm;
 #  endif /* _PC_NAME_MAX */
+	if (t->current_filesystem->name_max == 0) {
+		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+		    "Cannot determine name_max");
+		return (ARCHIVE_FAILED);
+	}
 #endif /* USE_READDIR_R */
 	return (ARCHIVE_OK);
 }
@@ -2102,6 +2126,8 @@ tree_push(struct tree *t, const char *path, int filesystem_id,
 	struct tree_entry *te;
 
 	te = calloc(1, sizeof(*te));
+	if (te == NULL)
+		__archive_errx(1, "Out of memory");
 	te->next = t->stack;
 	te->parent = t->current;
 	if (te->parent)
@@ -2155,7 +2181,7 @@ tree_append(struct tree *t, const char *name, size_t name_length)
  * Open a directory tree for traversal.
  */
 static struct tree *
-tree_open(const char *path, int symlink_mode, int restore_time)
+tree_open(const char *path, char symlink_mode, int restore_time)
 {
 	struct tree *t;
 
@@ -2541,7 +2567,11 @@ tree_current_lstat(struct tree *t)
 #else
 		if (tree_enter_working_dir(t) != 0)
 			return NULL;
+#ifdef HAVE_LSTAT
 		if (lstat(tree_current_access_path(t), &t->lst) != 0)
+#else
+		if (la_stat(tree_current_access_path(t), &t->lst) != 0)
+#endif
 #endif
 			return NULL;
 		t->flags |= hasLstat;
