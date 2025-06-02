@@ -32,14 +32,17 @@ jobs:
           for /f "delims=" %%i in ('vswhere.exe -latest -property installationPath') do set VS_PATH=%%i
           call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
 
-      - name: Build Aseprite
+      - name: Build aseprite
         shell: cmd
         run: |
+          for /f "delims=" %%i in ('vswhere.exe -latest -property installationPath') do set VS_PATH=%%i
+          call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
           cd aseprite
-          if not exist build mkdir build
+          mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=..\..\skia -DSKIA_LIBRARY_DIR=..\..\skia\out\Release-x64 -DSKIA_LIBRARY=..\..\skia\out\Release-x64\skia.lib -G Ninja ..
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=..\..\skia -DSKIA_LIBRARY_DIR=..\..\skia\out\Release-x64 -DSKIA_LIBRARY=..\..\skia\out\Release-x64\skia.lib ..
           ninja aseprite
+
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
